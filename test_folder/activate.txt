@@ -1,0 +1,2 @@
+PS C:\Work_space\HIDA\HIDA-Deep-Fake> Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+PS C:\Work_space\HIDA\HIDA-Deep-Fake> .\.venv\Scripts\activate.ps1
