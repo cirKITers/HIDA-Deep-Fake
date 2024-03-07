@@ -1,0 +1,47 @@
+Another task: 
+
+I have a txt file 
+
+
+
+
+
+------
+
+
+I have a very important task for you
+I have a txt file pretty.txt with such blocks as an example at the bottom of the message
+
+you see, abstracts are text that can occupy one or few lines. I want it in one line in the output.txt
+please use encoding='utf-8' for txt files
+
+I need to mention: 
+
+Title: Disentangling Multiqubit States using Deep Reinforcement Learning
+Authors: •Marin Bukov
+Affiliations: Max Planck Institute for the Physics of Complex Systems
+Abstract:
+Quantum entanglement plays a central role in modern quantum technologies. It is widely perceived as a proxy for the quantum nature of physical processes and phenomena involving more than one particle. In this talk, we will revisit the problem of disentangling 4-, 5-, and 6-qubit quantum states with the help of machine learning techniques. We use policy gradient algorithms to train a deep reinforcement learning agent which, given access to the pure state of a multiqubit system, has to find the shortest sequence of disentangling two-qubit gates that brings it to a product state. We leverage the agent's interpolation and extrapolation capabilities to learn (approximately) optimal strategies to disentangle Haar-random states that lack any obvious spatial entanglement structure in the computational basis. Analyzing the protocols found by the agent, we show that any 4-qubit state can be prepared using at most 11 CNOT gates. Last, we also demonstrate the robustness of our agent to various sources of stochasticity common for present-day NISQ devices.
+
+Title: Neural Quantum States For The Many-Electron Problem
+Authors: •Giuseppe Carleo
+Affiliations: EPFL, Lausanne, Switzerland
+Abstract:
+This presentation explores recent strides in using neural quantum states [1] to represent many-body fermionic quantum wave functions for the many-electron problem [2]. I will delve into a message-passing-neural-network-based Ansatz designed for simulating strongly interacting electrons in continuous space [3]. This approach achieves unprecedented accuracy in the electron gas problem, pushing the boundaries of system sizes previously inaccessible to neural network states. I will also discuss a Pfaffian-based neural-network quantum state for ultra-cold Fermi gases, outperforming traditional methods and enabling exploration of the BCS-BEC crossover region [4].
+Finally, I will provide insight into ongoing work on the entanglement properties of Helium 4 and Helium 3, and discuss open problems in the field [5].
+[1] Carleo and Troyer, Science 355, 602 (2017)
+[2] Hermann et al., Nature Reviews Chemistry 7, 692 (2023)
+[3] Pescia et al., arxiv:2305.07240 (2023)
+[4] Kim et al., arxiv:2305.08831 (2023)
+[5] Linteau et al., in preparation (2024).
+
+Title: Chemotaxis of an active particle attached to a semiflexible cargo
+Authors: •Shashank Ravichandir1, Abhinav Sharma2,1, and Jens-Uwe Sommer1
+Affiliations: 1Leibniz-Institut für Polymerforschung, Dresden, Germany — 2Universität Augsburg, Augsburg, Germany
+Abstract:
+The chemotaxis of synthetic active particles in activity gradients, achieved by connecting them to other active/passive particles to form simple dimers, has been demonstrated in recent studies. These studies have been extended to synthetic active particles connected to each other to form polymer chains, which also exhibit chemotaxis. However, the study of these polymer chains in activity gradients has been limited to the Rouse model, wherein the particles are connected to each other via springs, and the excluded volume interactions are ignored. To obtain a more realistic description, we consider an active synthetic particle connected to a passive tail that is semiflexible. In such a system, the configuration of the passive tail affects the motion of the active particle. Using
+Langevin dynamics simulations, we show that these polymers also exhibit chemotaxis in activity gradients despite the coupling between the active particle and the passive tail. We also study the effects of the chain length and bending rigidity on the chemotactic behavior.
+
+
+
+
