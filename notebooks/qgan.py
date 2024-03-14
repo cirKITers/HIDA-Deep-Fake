@@ -28,6 +28,7 @@ noise_gain = torch.pi / 6
 noise_offset = torch.pi / 2
 seed = 100
 
+
 # %%
 # Load MNIST dataset
 dataset = torchvision.datasets.MNIST(
@@ -50,10 +51,10 @@ class Discriminator(nn.Module):
 
         self.model = nn.Sequential(
             # Inputs to first hidden layer (num_input_features -> 64)
-            nn.Linear(image_size * image_size, 64),
+            nn.Linear(image_size * image_size, 32),
             nn.ReLU(),
             # First hidden layer (64 -> 16)
-            nn.Linear(64, 16),
+            nn.Linear(32, 16),
             nn.ReLU(),
             # Second hidden layer (16 -> output)
             nn.Linear(16, 1),
@@ -161,12 +162,12 @@ class Generator(nn.Module):
 
     def nec(
         self,
-        p: torch.Tensor,  # [B*IS*IS, NQ]
+        p: torch.Tensor,
     ) -> None:
         """Prepares the random states in the quantum circuit.
 
         Args:
-            p (torch.Tensor): The input noise states.
+            p (torch.Tensor): The input noise states. Shape = [B*IS*IS, NQ]
         """
         for qubit in range(self.n_qubits):
             qml.RZ(p[:, qubit], wires=qubit)
@@ -246,7 +247,7 @@ discriminator = Discriminator()
 # We use individual optimizers because it allows us to have different learning rates
 # and further separate the parameters of the models as seen later in training
 opt_discriminator = torch.optim.Adam(discriminator.parameters(), lr=0.01)
-opt_generator = torch.optim.Adam(generator.parameters(), lr=0.05)
+opt_generator = torch.optim.Adam(generator.parameters(), lr=0.02)
 
 loss = nn.BCELoss(
     reduction="mean"
@@ -315,7 +316,9 @@ class Dataset(torch.utils.data.Dataset):
         return mgrid
 
 
-gan_dataset = Dataset(dataset[(dataset.train_labels == selected_label)], n_samples)
+gan_dataset = Dataset(
+    (dataset.train_labels == selected_label).nonzero().flatten(), n_samples
+)
 dataloader = torch.utils.data.DataLoader(
     gan_dataset, batch_size=batch_size, shuffle=True
 )
@@ -339,6 +342,13 @@ with mlflow.start_run() as run:
     mlflow.log_param("noise_gain", noise_gain)
     mlflow.log_param("noise_offset", noise_offset)
     mlflow.log_param("seed", seed)
+
+    fig = plt.figure(figsize=(n_figures, 1))
+    for i in range(min(n_figures, batch_size)):
+        plt.subplot(1, n_figures, i + 1)
+        plt.axis("off")
+        plt.imshow(gan_dataset[i][0], cmap="gray")
+    mlflow.log_figure(fig, f"reference_images.png")
 
     print(
         f"Training started. Navigate to the MLflow UI at http://localhost:5000/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
