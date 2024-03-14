@@ -235,12 +235,15 @@ class Generator(nn.Module):
 
 
 # %%
+# Determine if CUDA is available
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 # Generate the individual models
 noise_source = NoiseSource(
     (n_qubits), seed=seed, noise_gain=noise_gain, noise_offset=noise_offset
-)
-generator = Generator(n_qubits=n_qubits, n_layers=n_layers)
-discriminator = Discriminator()
+).to(device)
+generator = Generator(n_qubits=n_qubits, n_layers=n_layers).to(device)
+discriminator = Discriminator().to(device)
 
 # %%
 # Initialize the optimizers for the generator and discriminator separately
@@ -311,7 +314,9 @@ class Dataset(torch.utils.data.Dataset):
         Returns:
             torch.Tensor: The generated meshgrid, with shape [samples, samples, 2].
         """
-        tensors = tuple(2 * [torch.linspace(domain[0], domain[1], steps=samples)])
+        tensors = tuple(
+            2 * [torch.linspace(domain[0], domain[1], steps=samples, device=device)]
+        )
         mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
         return mgrid
 
@@ -347,7 +352,7 @@ with mlflow.start_run() as run:
     for i in range(min(n_figures, batch_size)):
         plt.subplot(1, n_figures, i + 1)
         plt.axis("off")
-        plt.imshow(gan_dataset[i][0], cmap="gray")
+        plt.imshow(gan_dataset[i][0].cpu().numpy(), cmap="gray")
     mlflow.log_figure(fig, f"reference_images.png")
 
     print(
