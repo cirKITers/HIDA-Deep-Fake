@@ -53,43 +53,6 @@ for i, zidx in enumerate(images[:n_figures]):
 
 
 # %%
-class Dataset(torch.utils.data.Dataset):
-    """Custom Dataset that allows us to get the coordinates an the reference images
-
-    Args:
-        torch (_type_): _description_
-    """
-
-    def __init__(self, images, n_samples):
-        self.z = torch.stack(
-            [dataset[zidx][0][0] for zidx in images[:n_samples]]
-        )  # first [0] discards label, second [0] discards color channel
-        self.x = torch.stack(
-            [
-                self.generate_grid([-torch.pi / 2, torch.pi / 2], image_size)
-                for _ in range(self.z.shape[0])
-            ]
-        )
-
-    def __len__(self):
-        return len(self.z)
-
-    def __getitem__(self, idx):
-        return self.z[idx], self.x[idx]
-
-    def generate_grid(self, domain, samples):
-        tensors = tuple(2 * [torch.linspace(domain[0], domain[1], steps=samples)])
-        mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
-        return mgrid
-
-
-gan_dataset = Dataset(images, n_samples)
-dataloader = torch.utils.data.DataLoader(
-    gan_dataset, batch_size=batch_size, shuffle=True
-)
-
-
-# %%
 class Discriminator(nn.Module):
 
     def __init__(self, *args, **kwargs) -> None:
@@ -193,11 +156,11 @@ class Generator(nn.Module):
 
         x_in = x.reshape(batch_size, -1, 2)  # [B, IS, IS, 2] -> [B, IS*IS, 2]
         p_in = p.repeat(
-            batch_size * image_sidelength * image_sidelength
-        )  # [NQ] -> [B*IS*IS*NQ]
+            1, image_sidelength * image_sidelength
+        )  # [B, NQ] -> [B, IS*IS*NQ]
         p_in = p_in.reshape(
             batch_size, image_sidelength * image_sidelength, self.n_qubits
-        )  # [B*IS*IS*NQ] -> [B, IS*IS, NQ]
+        )  # [B, IS*IS*NQ] -> [B, IS*IS, NQ]
         combined = torch.cat(
             (x_in, p_in), dim=2
         )  # [B, IS*IS, 2] + [B, IS*IS, NQ] -> [B, IS*IS, NQ+2]
@@ -221,6 +184,47 @@ loss = nn.BCELoss(
     reduction="mean"
 )  # BCELoss with mean so that we don't depend on the batch size
 
+
+# %%
+class Dataset(torch.utils.data.Dataset):
+    """Custom Dataset that allows us to get the coordinates an the reference images
+
+    Args:
+        torch (_type_): _description_
+    """
+
+    def __init__(self, images, n_samples):
+        self.z = torch.stack(
+            [dataset[zidx][0][0] for zidx in images[:n_samples]]
+        )  # first [0] discards label, second [0] discards color channel
+        self.x = torch.stack(
+            [
+                self.generate_grid([-torch.pi / 2, torch.pi / 2], image_size)
+                for _ in range(self.z.shape[0])
+            ]
+        )
+        self.p_hat = torch.stack(
+            [noise_source() for _ in range(self.z.shape[0])]
+        )  # noise_source()
+
+    def __len__(self):
+        return len(self.z)
+
+    def __getitem__(self, idx):
+        return self.z[idx], self.x[idx], self.p_hat[idx]
+
+    def generate_grid(self, domain, samples):
+        tensors = tuple(2 * [torch.linspace(domain[0], domain[1], steps=samples)])
+        mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
+        return mgrid
+
+
+gan_dataset = Dataset(images, n_samples)
+dataloader = torch.utils.data.DataLoader(
+    gan_dataset, batch_size=batch_size, shuffle=True
+)
+
+
 # %%
 torch.autograd.set_detect_anomaly(True)
 mlflow.set_experiment("QGAN Test")
@@ -240,19 +244,13 @@ with mlflow.start_run() as run:
         f"Training started. Navigate to the MLflow UI at http://localhost:5000/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
     )
 
-    # Sample all the noise beforehand so have the same each epoch
-    all_p_hat = []
-    for i, (z, x) in enumerate(dataloader):
-        all_p_hat.append(noise_source())
-    all_p_hat = torch.stack(all_p_hat)
-
     for epoch in range(epochs):
 
         disc_epoch_loss = 0
         gen_epoch_loss = 0
-        for i, (z, x) in enumerate(dataloader):
+        for i, (z, x, p_hat) in enumerate(dataloader):
             # sample the images using the generated noise
-            z_hat = generator(all_p_hat[i], x)
+            z_hat = generator(p_hat, x)
 
             # train the discriminator
             y_hat = discriminator(
@@ -291,7 +289,7 @@ with mlflow.start_run() as run:
         )
 
         preds = z_hat.reshape(-1, image_size, image_size).detach().cpu().numpy()
-        fig = plt.figure(figsize=(8, 8))
+        fig = plt.figure(figsize=(n_figures, 1))
         for i in range(min(n_figures, batch_size)):
             plt.subplot(1, n_figures, i + 1)
             plt.axis("off")
