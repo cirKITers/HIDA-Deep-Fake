@@ -22,9 +22,9 @@ batch_size = 20
 epochs = 100
 selected_label = 0
 n_samples = 200
-n_qubits = 4
+n_qubits = 6
 n_layers = 22
-noise_gain = torch.pi / 4
+noise_gain = torch.pi / 6
 noise_offset = torch.pi / 2
 seed = 100
 
@@ -49,7 +49,7 @@ for i, zidx in enumerate(images[:n_figures]):
     plt.axis("off")
     plt.imshow(image, cmap="gray")
 
-plt.show()
+# plt.show()
 
 
 # %%
@@ -149,10 +149,9 @@ class Generator(nn.Module):
         x = inputs[:, :2]  # [B*IS*IS, NQ+2] -> [B*IS*IS, 2]
         p = inputs[:, 2:]  # [B*IS*IS, NQ+2] -> [B*IS*IS, NQ]
 
-        self.nec(p)  # prepare random states
-
         # build the trainable circuit
         for layer in range(self.n_layers - 1):
+            self.nec(p)  # prepare random states
             self.vqc(weights[layer])
             self.iec(x)
 
@@ -163,12 +162,12 @@ class Generator(nn.Module):
 
     def nec(self, p):
         for qubit in range(self.n_qubits):
-            qml.RY(p[:, qubit], wires=qubit)
+            qml.RZ(p[:, qubit], wires=qubit)
 
     def iec(self, x):
         for qubit in range(self.n_qubits):
-            qml.RY(x[:, 0], wires=qubit)
-            qml.RX(x[:, 1], wires=qubit)
+            qml.RX(x[:, 0], wires=qubit)
+            qml.RY(x[:, 1], wires=qubit)
 
     def vqc(self, weights):
         if weights is None:
@@ -216,7 +215,7 @@ discriminator = Discriminator()
 
 # %%
 opt_discriminator = torch.optim.Adam(discriminator.parameters(), lr=0.01)
-opt_generator = torch.optim.Adam(generator.parameters(), lr=0.05)
+opt_generator = torch.optim.Adam(generator.parameters(), lr=0.1)
 
 loss = nn.BCELoss(
     reduction="mean"
@@ -249,6 +248,8 @@ with mlflow.start_run() as run:
 
     for epoch in range(epochs):
 
+        disc_epoch_loss = 0
+        gen_epoch_loss = 0
         for i, (z, x) in enumerate(dataloader):
             # sample the images using the generated noise
             z_hat = generator(all_p_hat[i], x)
@@ -276,9 +277,24 @@ with mlflow.start_run() as run:
             gen_loss.backward()
             opt_generator.step()
 
-            mlflow.log_metric("discriminator_loss", disc_loss_combined.item())
-            mlflow.log_metric("generator_loss", gen_loss.item())
+            disc_epoch_loss += disc_loss_combined.item()
+            gen_epoch_loss += gen_loss.item()
+
+            mlflow.log_metric("discriminator_loss_step", disc_loss_combined.item())
+            mlflow.log_metric("generator_loss_step", gen_loss.item())
+
+        mlflow.log_metric(
+            "discriminator_loss", disc_epoch_loss / len(dataloader), step=epoch
+        )
+        mlflow.log_metric(
+            "generator_loss", gen_epoch_loss / len(dataloader), step=epoch
+        )
 
         preds = z_hat.reshape(-1, image_size, image_size).detach().cpu().numpy()
+        fig = plt.figure(figsize=(8, 8))
         for i in range(min(n_figures, batch_size)):
-            mlflow.log_image(preds[i], f"generated_epoch_{epoch}_image_{i}.png")
+            plt.subplot(1, n_figures, i + 1)
+            plt.axis("off")
+            plt.imshow(preds[i], cmap="gray")
+
+        mlflow.log_figure(fig, f"generated_epoch_{epoch}.png")
