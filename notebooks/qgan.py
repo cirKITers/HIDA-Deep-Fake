@@ -8,13 +8,11 @@ import mlflow
 from typing import List, Tuple
 
 
-# %% [markdown]
-# ## QGAN Tests
-#
-# ### To get this running:
+# To get this running:
 # - make sure to install [pytorch correctly](https://pytorch.org/get-started/locally/)
 # - launch the mlflow tracking server: `mlflow server`
 # - run the notebook
+
 
 # %%
 # Initialization of some global parameters
@@ -45,11 +43,7 @@ dataset = torchvision.datasets.MNIST(
 # %%
 # Discriminator definition
 class Discriminator(nn.Module):
-    """Unadvanced discriminator
-
-    Args:
-        nn (_type_): _description_
-    """
+    """Naive discriminator"""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
