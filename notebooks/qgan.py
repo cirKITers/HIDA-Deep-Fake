@@ -22,7 +22,7 @@ epochs = 100
 n_figures = 10
 selected_label = 0
 n_samples = 300
-n_qubits = 8
+n_qubits = 6
 n_layers = 22
 noise_gain = torch.pi / 6
 noise_offset = torch.pi / 2
@@ -360,6 +360,7 @@ with mlflow.start_run() as run:
         f"Training started. Navigate to the MLflow UI at http://localhost:5000/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
     )
 
+    total_step = 0
     for epoch in range(epochs):
 
         disc_epoch_loss = 0
@@ -394,8 +395,12 @@ with mlflow.start_run() as run:
             disc_epoch_loss += disc_loss_combined.item()
             gen_epoch_loss += gen_loss.item()
 
-            mlflow.log_metric("discriminator_loss_step", disc_loss_combined.item())
-            mlflow.log_metric("generator_loss_step", gen_loss.item())
+            mlflow.log_metric(
+                "discriminator_loss_step", disc_loss_combined.item(), step=total_step
+            )
+            mlflow.log_metric("generator_loss_step", gen_loss.item(), step=total_step)
+
+            total_step += 1
 
         mlflow.log_metric(
             "discriminator_loss", disc_epoch_loss / len(dataloader), step=epoch
