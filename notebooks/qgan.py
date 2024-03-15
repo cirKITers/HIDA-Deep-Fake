@@ -331,10 +331,13 @@ dataloader = torch.utils.data.DataLoader(
 torch.autograd.set_detect_anomaly(True)
 
 # Do some mlflow setup
-mlflow.set_tracking_uri("http://127.0.0.1:5001")
+tracking_uri = "http://127.0.0.1:5000"
+mlflow.set_tracking_uri(tracking_uri)
 mlflow.set_experiment("QGAN Test")
 
+print(f"Trying to connect to mlflow server. Make sure it runs at {tracking_uri}")
 with mlflow.start_run() as run:
+    print("Connected to mlflow server")
     mlflow.log_param("image_size", image_size)
     mlflow.log_param("batch_size", batch_size)
     mlflow.log_param("epochs", epochs)
