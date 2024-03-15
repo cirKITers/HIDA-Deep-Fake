@@ -355,6 +355,7 @@ with mlflow.start_run() as run:
         plt.axis("off")
         plt.imshow(gan_dataset[i][0].cpu().numpy(), cmap="gray")
     mlflow.log_figure(fig, f"reference_images.png")
+    plt.close()
 
     print(
         f"Training started. Navigate to the MLflow UI at http://localhost:5000/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
@@ -409,7 +410,7 @@ with mlflow.start_run() as run:
             "generator_loss", gen_epoch_loss / len(dataloader), step=epoch
         )
 
-        preds = z_hat.reshape(-1, image_size, image_size).detach().cpu().numpy()
+        preds = z_hat.reshape(-1, image_size, image_size).det5001ach().cpu().numpy()
         fig = plt.figure(figsize=(n_figures, 1))
         for i in range(min(n_figures, batch_size)):
             plt.subplot(1, n_figures, i + 1)
@@ -417,3 +418,4 @@ with mlflow.start_run() as run:
             plt.imshow(preds[i], cmap="gray")
 
         mlflow.log_figure(fig, f"generated_epoch_{epoch}.png")
+        plt.close()
