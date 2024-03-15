@@ -19,10 +19,10 @@ from typing import List, Tuple
 image_size = 12
 batch_size = 20
 epochs = 100
-n_figures = 8
+n_figures = 10
 selected_label = 0
-n_samples = 200
-n_qubits = 6
+n_samples = 300
+n_qubits = 8
 n_layers = 22
 noise_gain = torch.pi / 6
 noise_offset = torch.pi / 2
@@ -250,11 +250,9 @@ discriminator = Discriminator().to(device)
 # We use individual optimizers because it allows us to have different learning rates
 # and further separate the parameters of the models as seen later in training
 opt_discriminator = torch.optim.Adam(discriminator.parameters(), lr=0.01)
-opt_generator = torch.optim.Adam(generator.parameters(), lr=0.02)
+opt_generator = torch.optim.Adam(generator.parameters(), lr=0.04)
 
-loss = nn.BCELoss(
-    reduction="mean"
-)  # BCELoss with mean so that we don't depend on the batch size
+loss = nn.BCELoss()  # BCELoss with mean so that we don't depend on the batch size
 
 
 # %%
@@ -333,7 +331,7 @@ dataloader = torch.utils.data.DataLoader(
 torch.autograd.set_detect_anomaly(True)
 
 # Do some mlflow setup
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
+mlflow.set_tracking_uri("http://127.0.0.1:5001")
 mlflow.set_experiment("QGAN Test")
 
 with mlflow.start_run() as run:
