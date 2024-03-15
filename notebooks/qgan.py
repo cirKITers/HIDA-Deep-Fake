@@ -389,7 +389,7 @@ with mlflow.start_run() as run:
             )  # run discriminator again, but with attached generator output
             gen_loss = loss(y_hat, torch.ones_like(y_hat))  # all-real labels
             gen_loss.backward()
-            opt_generator.step()
+            opt_generator.step()  # this will cause theupdate of parameters only in the generator
 
             disc_epoch_loss += disc_loss_combined.item()
             gen_epoch_loss += gen_loss.item()
