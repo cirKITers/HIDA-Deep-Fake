@@ -16,17 +16,17 @@ from typing import List, Tuple
 
 # %%
 # Initialization of some global parameters
-image_size = 12
-batch_size = 20
-epochs = 100
-n_figures = 10
-selected_label = 0
-n_samples = 300
-n_qubits = 6
-n_layers = 22
-noise_gain = torch.pi / 6
-noise_offset = torch.pi / 2
-seed = 100
+image_size = 12  # MNIST image size. This will increase computation time quadratically
+batch_size = 20  # Batch Size
+epochs = 100  # Epochs the model (gen + disc) are being trained
+n_figures = 10  # Number of figures to plot
+selected_label = 0  # Label to select from 0-9
+n_samples = 400  # Size of the (reduced) dataset
+n_qubits = 8  # Number of qubits
+n_layers = 22  # Number of layers
+noise_gain = torch.pi / 6  # Noise gain. Amplifies Z rotation
+noise_offset = 0  # Noise offset. Offsets Z rotation
+seed = 100  # Seed for generating random numbers
 
 
 # %%
