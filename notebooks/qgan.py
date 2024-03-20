@@ -28,6 +28,7 @@ noise_gain = torch.pi / 6  # Noise gain. Amplifies Z rotation
 noise_offset = 0  # Noise offset. Offsets Z rotation
 seed = 100  # Seed for generating random numbers
 
+rng = torch.Generator().manual_seed(seed)
 
 # %%
 # Load MNIST dataset
@@ -73,7 +74,7 @@ class NoiseSource(nn.Module):
     def __init__(
         self,
         output_shape: Tuple[int, ...],
-        seed: int,
+        rng: int,
         noise_gain: torch.Tensor,
         noise_offset: torch.Tensor,
         **kwargs,
@@ -89,7 +90,7 @@ class NoiseSource(nn.Module):
 
         super().__init__(**kwargs)
 
-        self.rng = torch.Generator().manual_seed(seed)
+        self.rng = rng
         self.output_shape = output_shape
         self.noise_gain = noise_gain
         self.noise_offset = noise_offset
@@ -240,7 +241,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Generate the individual models
 noise_source = NoiseSource(
-    (n_qubits), seed=seed, noise_gain=noise_gain, noise_offset=noise_offset
+    (n_qubits), rng=rng, noise_gain=noise_gain, noise_offset=noise_offset
 ).to(device)
 generator = Generator(n_qubits=n_qubits, n_layers=n_layers).to(device)
 discriminator = Discriminator().to(device)
@@ -322,8 +323,9 @@ class Dataset(torch.utils.data.Dataset):
 gan_dataset = Dataset(
     (dataset.train_labels == selected_label).nonzero().flatten(), n_samples
 )
+# Configure dataloader to shuffle, drop last incomplete batch and use the rng
 dataloader = torch.utils.data.DataLoader(
-    gan_dataset, batch_size=batch_size, shuffle=True
+    gan_dataset, batch_size=batch_size, shuffle=True, drop_last=True, generator=rng
 )
 
 
