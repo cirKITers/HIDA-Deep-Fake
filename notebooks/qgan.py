@@ -316,7 +316,8 @@ class Dataset(torch.utils.data.Dataset):
         tensors = tuple(
             2 * [torch.linspace(domain[0], domain[1], steps=samples, device=device)]
         )
-        mgrid = torch.stack(torch.meshgrid(*tensors), dim=-1)
+        # indexing 'ij' means the dimensions are in the same order as the cardinality of the input
+        mgrid = torch.stack(torch.meshgrid(*tensors, indexing="ij"), dim=-1)
         return mgrid
 
 
