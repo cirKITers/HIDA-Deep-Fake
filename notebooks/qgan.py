@@ -383,6 +383,7 @@ with mlflow.start_run() as run:
             disc_loss_fake = loss(y_hat, torch.zeros_like(y_hat))  # 0s: fake images
             disc_loss_combined = disc_loss_real + disc_loss_fake
 
+            # if epoch == 0 or epoch % 2 == 0:
             opt_discriminator.zero_grad()
             disc_loss_combined.backward()
             opt_discriminator.step()
