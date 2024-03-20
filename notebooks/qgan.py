@@ -413,7 +413,7 @@ with mlflow.start_run() as run:
             "generator_loss", gen_epoch_loss / len(dataloader), step=epoch
         )
 
-        preds = z_hat.reshape(-1, image_size, image_size).det5001ach().cpu().numpy()
+        preds = z_hat.reshape(-1, image_size, image_size).detach().cpu().numpy()
         fig = plt.figure(figsize=(n_figures, 1))
         for i in range(min(n_figures, batch_size)):
             plt.subplot(1, n_figures, i + 1)
