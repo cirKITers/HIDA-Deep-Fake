@@ -321,8 +321,9 @@ class Dataset(torch.utils.data.Dataset):
         return mgrid
 
 
+# Generate the dataset using the selected label and the number of samples
 gan_dataset = Dataset(
-    (dataset.train_labels == selected_label).nonzero().flatten(), n_samples
+    (dataset.targets == selected_label).nonzero().flatten(), n_samples
 )
 # Configure dataloader to shuffle, drop last incomplete batch and use the rng
 dataloader = torch.utils.data.DataLoader(
@@ -331,6 +332,7 @@ dataloader = torch.utils.data.DataLoader(
 
 
 # %%
+# Will help us to detect e.g. when parts of the model don't receive gradients
 torch.autograd.set_detect_anomaly(True)
 
 # Do some mlflow setup
