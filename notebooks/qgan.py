@@ -250,8 +250,8 @@ discriminator = Discriminator().to(device)
 # Initialize the optimizers for the generator and discriminator separately
 # We use individual optimizers because it allows us to have different learning rates
 # and further separate the parameters of the models as seen later in training
-opt_discriminator = torch.optim.Adam(discriminator.parameters(), lr=0.01)
-opt_generator = torch.optim.Adam(generator.parameters(), lr=0.04)
+opt_discriminator = torch.optim.Adam(discriminator.parameters(), lr=0.001)
+opt_generator = torch.optim.Adam(generator.parameters(), lr=0.01)
 
 loss = nn.BCELoss()  # BCELoss with mean so that we don't depend on the batch size
 
