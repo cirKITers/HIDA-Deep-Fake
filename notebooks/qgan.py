@@ -179,7 +179,7 @@ class Generator(nn.Module):
 
         Args:
             x (torch.Tensor): The input coordinates. Shape = [B*IS*IS, 2]
-        """
+        """ 
         for qubit in range(self.n_qubits):
             qml.RX(x[:, 0], wires=qubit)
             qml.RY(x[:, 1], wires=qubit)
@@ -382,7 +382,7 @@ with mlflow.start_run() as run:
             )  # detach the generator output from the graph
             y = discriminator(z.view(-1, image_size * image_size))
 
-            disc_loss_real = loss(y, torch.ones_like(y))  # 1s: real images
+            disc_loss_real = loss(y, torch.zeros_like(y))  # 1s: real images
             disc_loss_fake = loss(y_hat, torch.zeros_like(y_hat))  # 0s: fake images
             # Wasserstein discriminator loss
             disc_loss_combined = disc_loss_fake - disc_loss_real
@@ -399,10 +399,25 @@ with mlflow.start_run() as run:
             )  # run discriminator again, but with attached generator output
             gen_loss = loss(y_hat, torch.ones_like(y_hat))  # all-real labels
             gen_loss.backward()
-            opt_generator.step()  # this will cause theupdate of parameters only in the generator
+            opt_generator.step()  # this will cause the update of parameters only in the generator
 
             disc_epoch_loss += disc_loss_combined.item()
             gen_epoch_loss += gen_loss.item()
+
+            mlflow.log_metric(
+                "discriminator_abs_mean_gradients",
+                torch.stack([p.grad.abs().mean() for p in discriminator.parameters()])
+                .mean()
+                .item(),
+                step=total_step,
+            )
+            mlflow.log_metric(
+                "generator_abs_mean_gradients",
+                torch.stack([p.grad.abs().mean() for p in generator.parameters()])
+                .mean()
+                .item(),
+                step=total_step,
+            )
 
             mlflow.log_metric(
                 "discriminator_loss_step", disc_loss_combined.item(), step=total_step
