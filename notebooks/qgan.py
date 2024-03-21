@@ -179,7 +179,7 @@ class Generator(nn.Module):
 
         Args:
             x (torch.Tensor): The input coordinates. Shape = [B*IS*IS, 2]
-        """ 
+        """
         for qubit in range(self.n_qubits):
             qml.RX(x[:, 0], wires=qubit)
             qml.RY(x[:, 1], wires=qubit)
@@ -382,10 +382,10 @@ with mlflow.start_run() as run:
             )  # detach the generator output from the graph
             y = discriminator(z.view(-1, image_size * image_size))
 
-            disc_loss_real = loss(y, torch.zeros_like(y))  # 1s: real images
+            disc_loss_real = loss(y, torch.ones_like(y))  # 1s: real images
             disc_loss_fake = loss(y_hat, torch.zeros_like(y_hat))  # 0s: fake images
             # Wasserstein discriminator loss
-            disc_loss_combined = disc_loss_fake - disc_loss_real
+            disc_loss_combined = disc_loss_fake + disc_loss_real
 
             # if epoch == 0 or epoch % 2 == 0:
             opt_discriminator.zero_grad()
