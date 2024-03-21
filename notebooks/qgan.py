@@ -50,13 +50,14 @@ class Discriminator(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
+        # num_input_features = image_size * image_size
         self.model = nn.Sequential(
-            # Inputs to first hidden layer (num_input_features -> 64)
+            # Inputs to first hidden layer (num_input_features -> 32)
             nn.Linear(image_size * image_size, 32),
-            nn.ReLU(),
-            # First hidden layer (64 -> 16)
+            nn.LeakyReLU(),
+            # First hidden layer (32 -> 16)
             nn.Linear(32, 16),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             # Second hidden layer (16 -> output)
             nn.Linear(16, 1),
             nn.Sigmoid(),
