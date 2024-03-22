@@ -1,5 +1,4 @@
 # %%
-import pennylane as qml
 import torchvision
 from matplotlib import pyplot as plt
 import torch
@@ -7,7 +6,9 @@ import torch.nn as nn
 import mlflow
 from typing import List, Tuple
 
-from .QGenerator import Generator
+from QGenerator import Generator
+from Discriminator import Discriminator
+from NoiseSource import NoiseSource
 
 # To get this running:
 # - make sure to install [pytorch correctly](https://pytorch.org/get-started/locally/)
@@ -44,67 +45,6 @@ dataset = torchvision.datasets.MNIST(
 
 
 # %%
-# Discriminator definition
-class Discriminator(nn.Module):
-    """Naive discriminator"""
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        # num_input_features = image_size * image_size
-        self.model = nn.Sequential(
-            # Inputs to first hidden layer (num_input_features -> 32)
-            nn.Linear(image_size * image_size, 32),
-            nn.LeakyReLU(),
-            # First hidden layer (32 -> 16)
-            nn.Linear(32, 16),
-            nn.LeakyReLU(),
-            # Second hidden layer (16 -> output)
-            nn.Linear(16, 1),
-            nn.Sigmoid(),
-        )
-
-    def forward(self, x):
-        return self.model(x)
-
-
-# %%
-# Noise source definition
-class NoiseSource(nn.Module):
-    """Noise Source sampling from normal distribution with zero mean and unit variance weighted and shifted accordingly"""
-
-    def __init__(
-        self,
-        output_shape: Tuple[int, ...],
-        rng: int,
-        noise_gain: torch.Tensor,
-        noise_offset: torch.Tensor,
-        **kwargs,
-    ) -> None:
-        """Noise Source sampling from normal distribution with zero mean and unit variance weighted and shifted accordingly.
-
-        Args:
-            output_shape (Tuple[int, ...]): Output shape of tensor
-            seed (int): Seed for generating random numbers
-            noise_gain (torch.Tensor): Weight tensor of the noise
-            noise_offset (torch.Tensor): Offset tensor of the noise
-        """
-
-        super().__init__(**kwargs)
-
-        self.rng = rng
-        self.output_shape = output_shape
-        self.noise_gain = noise_gain
-        self.noise_offset = noise_offset
-
-    def forward(self):
-        return (
-            self.noise_offset
-            + torch.randn(self.output_shape, generator=self.rng) * self.noise_gain
-        )
-
-
-# %%
 # Generator definition
 
 
@@ -117,7 +57,7 @@ noise_source = NoiseSource(
     (n_qubits), rng=rng, noise_gain=noise_gain, noise_offset=noise_offset
 ).to(device)
 generator = Generator(n_qubits=n_qubits, n_layers=n_layers).to(device)
-discriminator = Discriminator().to(device)
+discriminator = Discriminator(image_size=image_size).to(device)
 
 # %%
 # Initialize the optimizers for the generator and discriminator separately

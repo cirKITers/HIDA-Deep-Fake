@@ -8,8 +8,8 @@
             "name": "Python Debugger: abc",
             "type": "debugpy",
             "request": "launch",
-            "program": "test.py",
-            "console": "integratedTerminal"
+            "program": "notebooks/qgan.py",
+            "console": "integratedTerminal",
         }
     ]
 }
