@@ -165,13 +165,11 @@ with mlflow.start_run() as run:
     plt.close()
 
     print(
-        f"Training started. Navigate to the MLflow UI at
-          http://localhost:5000/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
+        f"Training started. Navigate to the MLflow UI at http://localhost:5000/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"  # noqa
     )
 
     total_step = 0
     for epoch in range(epochs):
-
         disc_epoch_loss = 0
         gen_epoch_loss = 0
         for i, (z, x, p_hat) in enumerate(dataloader):
