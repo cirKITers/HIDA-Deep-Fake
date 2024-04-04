@@ -164,7 +164,7 @@ class Trainer:
             noise_offset=self.params.noise_offset,
         )
 
-        log.info("Instantiating generator")
+        log.info("Instantiating classical generator")
         generator = CGenenerator(
             latent_size=self.params.latent_size, image_size=self.params.image_size
         ).to(self.device)
@@ -187,7 +187,38 @@ class Trainer:
         )
 
     def train_cq_gan(self):
-        raise NotImplementedError()
+        log.info("Instantiating classical noise source")
+        log.warning(
+            f"Using latent space dimension {self.params.n_qubits} instead of {self.params.latent_size}"
+        )
+        noise_source = CNoiseSource(
+            output_shape=(self.params.n_qubits),
+            rng=self.rng,
+            noise_gain=self.params.noise_gain,
+            noise_offset=self.params.noise_offset,
+        )
+
+        log.info("Instantiating quantum generator")
+        generator = QGenerator(
+            n_qubits=self.params.n_qubits, n_layers=self.params.n_layers
+        ).to(self.device)
+
+        log.info("Instantiating discriminator")
+        discriminator = Discriminator(image_size=self.params.image_size).to(self.device)
+
+        opt_generator = torch.optim.Adam(generator.parameters(), lr=self.params.c_lr)
+        opt_discriminator = torch.optim.Adam(
+            discriminator.parameters(), lr=self.params.d_lr
+        )
+
+        log.info("Starting training of CC-GAN")
+        self.train_general_gan(
+            generator=generator,
+            discriminator=discriminator,
+            opt_generator=opt_generator,
+            opt_discriminator=opt_discriminator,
+            noiseSource=noise_source,
+        )
 
     def train_qc_gan(self):
         raise NotImplementedError()
@@ -201,7 +232,7 @@ class Trainer:
 
 def train_all(params):
     trainer = Trainer(params)
-    trainer.train_cc_gan()
+    trainer.train_cq_gan()
     pass
 
 
