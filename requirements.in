@@ -2,3 +2,4 @@ pennylane
 mlflow
 torch
 torchvision
+colorlog
