@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: abc",
+            "name": "Main",
             "type": "debugpy",
             "request": "launch",
-            "program": "notebooks/qgan.py",
-            "console": "integratedTerminal",
-        }
+            "program": "src/__main__.py",
+            "console": "integratedTerminal"
+        },
     ]
 }
