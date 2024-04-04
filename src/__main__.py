@@ -232,6 +232,7 @@ class Trainer:
 
 def train_all(params):
     trainer = Trainer(params)
+    trainer.train_cc_gan()
     trainer.train_cq_gan()
     pass
 
