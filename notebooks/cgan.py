@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-matplotlib.style.use('ggplot')
+matplotlib.style.use("ggplot")
 
 # learning parameters
 image_size = 12
@@ -32,23 +32,22 @@ seed = 100
 
 selected_label = 0
 
-device = torch.device('cpu')
+device = torch.device("cpu")
 
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    # transforms.Normalize((0.5,),(0.5,)),
-    torchvision.transforms.Resize(image_size),
-])
+transform = transforms.Compose(
+    [
+        transforms.ToTensor(),
+        # transforms.Normalize((0.5,),(0.5,)),
+        torchvision.transforms.Resize(image_size),
+    ]
+)
 to_pil_image = transforms.ToPILImage()
 
 dataset = datasets.MNIST(
-    root='./input/data',
-    train=True,
-    download=True,
-    transform=transform
+    root="./input/data", train=True, download=True, transform=transform
 )
 
-idx = (dataset.targets == selected_label)
+idx = dataset.targets == selected_label
 dataset.data = dataset.data[idx]
 dataset.targets = dataset.targets[idx]
 
@@ -70,8 +69,10 @@ class Generator(nn.Module):
             nn.Linear(1024, self.image_size * self.image_size),
             nn.Tanh(),
         )
+
     def forward(self, x):
         return self.main(x).view(-1, 1, self.image_size, self.image_size)
+
 
 class Discriminator(nn.Module):
     def __init__(self, image_size):
@@ -90,6 +91,7 @@ class Discriminator(nn.Module):
             nn.Linear(256, 1),
             nn.Sigmoid(),
         )
+
     def forward(self, x):
         x = x.view(-1, self.image_size * self.image_size)
         return self.main(x)
@@ -97,12 +99,12 @@ class Discriminator(nn.Module):
 
 generator = Generator(image_size, nz).to(device)
 discriminator = Discriminator(image_size).to(device)
-print('##### GENERATOR #####')
+print("##### GENERATOR #####")
 print(generator)
-print('######################')
-print('\n##### DISCRIMINATOR #####')
+print("######################")
+print("\n##### DISCRIMINATOR #####")
 print(discriminator)
-print('######################')
+print("######################")
 
 
 # optimizers
@@ -182,7 +184,9 @@ discriminator.train()
 for epoch in range(epochs):
     loss_g = 0.0
     loss_d = 0.0
-    for bi, data in tqdm(enumerate(train_loader), total=int(len(dataset)/train_loader.batch_size)):
+    for bi, data in tqdm(
+        enumerate(train_loader), total=int(len(dataset) / train_loader.batch_size)
+    ):
         image, _ = data
         # image = image.to(device)
         b_size = len(image)
@@ -201,7 +205,7 @@ for epoch in range(epochs):
     # make the images as grid
     generated_img = make_grid(generated_img)
     # save the generated torch tensor models to disk
-    if (epoch+1) % 5 == 0:
+    if (epoch + 1) % 5 == 0:
         save_generator_image(generated_img, f"./outputs/gen_img{epoch}.png")
     images.append(generated_img)
     epoch_loss_g = (loss_g / bi).detach()
@@ -210,19 +214,21 @@ for epoch in range(epochs):
     losses_d.append(epoch_loss_d)
 
     print(f"Epoch {epoch} of {epochs}")
-    print(f"Generator loss: {epoch_loss_g:.8f}," +
-          f"Discriminator loss: {epoch_loss_d:.8f}")
+    print(
+        f"Generator loss: {epoch_loss_g:.8f},"
+        + f"Discriminator loss: {epoch_loss_d:.8f}"
+    )
 
-print('DONE TRAINING')
-torch.save(generator.state_dict(), './outputs/generator.pth')
+print("DONE TRAINING")
+torch.save(generator.state_dict(), "./outputs/generator.pth")
 
 # save the generated images as GIF file
 imgs = [np.array(to_pil_image(img)) for img in images]
-imageio.mimsave('./outputs/generator_images.gif', imgs)
+imageio.mimsave("./outputs/generator_images.gif", imgs)
 
 # plot and save the generator and discriminator loss
 plt.figure()
-plt.plot(losses_g, label='Generator loss')
-plt.plot(losses_d, label='Discriminator Loss')
+plt.plot(losses_g, label="Generator loss")
+plt.plot(losses_d, label="Discriminator Loss")
 plt.legend()
-plt.savefig('./outputs/loss.png')
+plt.savefig("./outputs/loss.png")
