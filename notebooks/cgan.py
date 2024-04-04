@@ -8,7 +8,7 @@ import imageio
 import numpy as np
 import matplotlib
 
-from Discriminator import Discriminator
+# from Discriminator import Discriminator
 from NoiseSource import NoiseSource
 
 from torchvision.utils import make_grid, save_image
@@ -27,7 +27,7 @@ nz = 128  # latent vector size
 k = 1  # number of steps to apply to the discriminator
 
 noise_gain = torch.pi / 6
-noise_offset = torch.pi / 2
+noise_offset = 0
 seed = 100
 
 selected_label = 0
@@ -36,6 +36,7 @@ device = torch.device('cpu')
 
 transform = transforms.Compose([
     transforms.ToTensor(),
+    # transforms.Normalize((0.5,),(0.5,)),
     torchvision.transforms.Resize(image_size),
 ])
 to_pil_image = transforms.ToPILImage()
@@ -50,7 +51,6 @@ dataset = datasets.MNIST(
 idx = (dataset.targets == selected_label)
 dataset.data = dataset.data[idx]
 dataset.targets = dataset.targets[idx]
-
 
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
@@ -67,12 +67,32 @@ class Generator(nn.Module):
             nn.LeakyReLU(0.2),
             nn.Linear(512, 1024),
             nn.LeakyReLU(0.2),
-            nn.Linear(1024, self.image_size**2),
-            nn.Sigmoid(),
+            nn.Linear(1024, self.image_size * self.image_size),
+            nn.Tanh(),
         )
-
     def forward(self, x):
         return self.main(x).view(-1, 1, self.image_size, self.image_size)
+
+class Discriminator(nn.Module):
+    def __init__(self, image_size):
+        super(Discriminator, self).__init__()
+        self.image_size = image_size
+        self.main = nn.Sequential(
+            nn.Linear(self.image_size * self.image_size, 1024),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.3),
+            nn.Linear(1024, 512),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.3),
+            nn.Linear(512, 256),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.3),
+            nn.Linear(256, 1),
+            nn.Sigmoid(),
+        )
+    def forward(self, x):
+        x = x.view(-1, self.image_size * self.image_size)
+        return self.main(x)
 
 
 generator = Generator(image_size, nz).to(device)
@@ -122,6 +142,7 @@ def save_generator_image(image, path):
 # function to train the discriminator network
 def train_discriminator(optimizer, data_real, data_fake):
     b_size = data_real.size(0)
+    # data_real += torch.normal(mean=0.1, std=0.1, size=data_real.size())
     real_label = label_real(b_size)
     fake_label = label_fake(b_size)
     optimizer.zero_grad()
@@ -153,6 +174,7 @@ noise_source = NoiseSource(
 ).to(device)
 noise = noise_source((sample_size, nz))
 # noise = create_noise(sample_size, nz)
+
 
 generator.train()
 discriminator.train()
