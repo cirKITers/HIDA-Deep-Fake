@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import mlflow
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from log import create_logger, set_level
 
@@ -12,7 +13,6 @@ from classical_generator import Generator as CGenenerator
 from classical_noise_source import NoiseSource as CNoiseSource
 from quantum_generator import Generator as QGenerator
 from quantum_noise_source import NoiseSource as QNoiseSource
-from gan import GenerativeAdversarialNetwork as GAN
 from dataset import Dataset
 from config_parser import ConfigParser
 
@@ -25,6 +25,7 @@ class Trainer:
         self.rng = torch.Generator().manual_seed(params.seed)
         set_level(log, params.log_level)
 
+        log.info("Intializing dataset")
         dataset = Dataset(
             selected_label=params.selected_label,
             n_samples=params.n_samples,
@@ -32,6 +33,7 @@ class Trainer:
             data_dir=params.data_dir,
             device=self.device,
         )
+        log.info("Setting up dataloader")
         self.dataloader = torch.utils.data.DataLoader(
             dataset,
             batch_size=params.batch_size,
@@ -45,14 +47,17 @@ class Trainer:
         self.setup_mlflow()
 
     def setup_mlflow(self):
+        log.info(
+            f"Setting up mlflow experiment using server at {self.params.tracking_uri}"
+        )
         mlflow.set_tracking_uri(self.params.tracking_uri)
         mlflow.set_experiment("QGAN Test")
 
     def run_mlflow(self):
-        log.info(
-            f"Trying to connect to mlflow server. Make sure it runs at {mlflow.get_tracking_uri()}"
-        )
-        return mlflow.start_run()
+        log.info(f"Trying to connect to mlflow server.")
+        run = mlflow.start_run()
+        log.info("Connected!")
+        return run
 
     def train_general_gan(
         self,
@@ -61,16 +66,16 @@ class Trainer:
         opt_generator,
         opt_discriminator,
         noiseSource,
-        loss,
     ):
         with self.run_mlflow() as run:
+            log.info(
+                f"Results will be logged at http://localhost:5000/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"  # noqa
+            )
             mlflow.log_params(self.params.__dict__)
-
-            # Plot figures
 
             # Main Training Loop
             total_step = 0
-            for epoch in range(self.params.epochs):
+            for epoch in tqdm(range(self.params.epochs), desc="Training (Epochs)"):
                 disc_epoch_loss = 0
                 gen_epoch_loss = 0
                 for i, (z, x) in enumerate(self.dataloader):
@@ -86,8 +91,10 @@ class Trainer:
                         )  # detach the generator output from the graph
                         y = discriminator(z)
 
-                        disc_loss_real = loss(y, torch.ones_like(y))  # 1s: real images
-                        disc_loss_fake = loss(
+                        disc_loss_real = self.loss(
+                            y, torch.ones_like(y)
+                        )  # 1s: real images
+                        disc_loss_fake = self.loss(
                             y_hat, torch.zeros_like(y_hat)
                         )  # 0s: fake images
                         # Wasserstein discriminator loss
@@ -102,7 +109,9 @@ class Trainer:
                     y_hat = discriminator(
                         z_hat
                     )  # run discriminator again, but with attached generator output
-                    gen_loss = loss(y_hat, torch.ones_like(y_hat))  # all-real labels
+                    gen_loss = self.loss(
+                        y_hat, torch.ones_like(y_hat)
+                    )  # all-real labels
                     gen_loss.backward()
                     opt_generator.step()  # this will cause the update of parameters only in the generator
 
@@ -119,8 +128,6 @@ class Trainer:
                     )
 
                     total_step += 1
-
-                    log.debug(f"Finished step {total_step}")
 
                 mlflow.log_metric(
                     "discriminator_loss",
@@ -146,9 +153,10 @@ class Trainer:
                 mlflow.log_figure(fig, f"generated_epoch_{epoch}.png")
                 plt.close()
 
-                log.info(f"Finished epoch {epoch}")
+        log.info("Training finished")
 
     def train_cc_gan(self):
+        log.info("Instantiating classical noise source")
         noise_source = CNoiseSource(
             output_shape=(self.params.latent_size),
             rng=self.rng,
@@ -156,24 +164,26 @@ class Trainer:
             noise_offset=self.params.noise_offset,
         )
 
+        log.info("Instantiating generator")
         generator = CGenenerator(
             latent_size=self.params.latent_size, image_size=self.params.image_size
         ).to(self.device)
+
+        log.info("Instantiating discriminator")
         discriminator = Discriminator(image_size=self.params.image_size).to(self.device)
 
         opt_generator = torch.optim.Adam(generator.parameters(), lr=self.params.c_lr)
         opt_discriminator = torch.optim.Adam(
             discriminator.parameters(), lr=self.params.d_lr
         )
-        loss = nn.BCELoss()
 
+        log.info("Starting training of CC-GAN")
         self.train_general_gan(
             generator=generator,
             discriminator=discriminator,
             opt_generator=opt_generator,
             opt_discriminator=opt_discriminator,
             noiseSource=noise_source,
-            loss=loss,
         )
 
     def train_cq_gan(self):
