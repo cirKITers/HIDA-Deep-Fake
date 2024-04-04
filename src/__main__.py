@@ -79,7 +79,7 @@ class Trainer:
                     # sample the images using the generated noise
                     z_hat = generator(p_hat, x)
 
-                    for _ in range(3):
+                    for _ in range(self.params.generator_update_step):
                         # train the discriminator
                         y_hat = discriminator(
                             z_hat.detach()

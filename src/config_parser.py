@@ -25,6 +25,7 @@ class ConfigParser:
         parser.add_argument("--d_lr", type=float, default=0.0002)
         parser.add_argument("--c_lr", type=float, default=0.0002)
         parser.add_argument("--q_lr", type=float, default=0.01)
+        parser.add_argument("--generator_update_step", type=int, default=3)
         parser.add_argument("--noise_gain", type=float, default=0.5)
         parser.add_argument("--noise_offset", type=float, default=0.0)
         parser.add_argument("--selected_label", type=int, default=0)
