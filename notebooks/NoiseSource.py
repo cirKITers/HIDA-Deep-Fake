@@ -4,7 +4,8 @@ from typing import Tuple
 
 
 class NoiseSource(nn.Module):
-    """Noise Source sampling from normal distribution with zero mean and unit variance weighted and shifted accordingly"""
+    """Noise Source sampling from normal distribution with zero mean
+    and unit variance weighted and shifted accordingly"""
 
     def __init__(
         self,
@@ -14,7 +15,8 @@ class NoiseSource(nn.Module):
         noise_offset: torch.Tensor,
         **kwargs,
     ) -> None:
-        """Noise Source sampling from normal distribution with zero mean and unit variance weighted and shifted accordingly.
+        """Noise Source sampling from normal distribution with zero mean
+        and unit variance weighted and shifted accordingly.
 
         Args:
             output_shape (Tuple[int, ...]): Output shape of tensor

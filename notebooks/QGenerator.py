@@ -5,7 +5,8 @@ import torch.nn as nn
 
 class Generator(nn.Module):
     """Quantum Generator Model
-    This model takes a samples from the noise source and coordinates and outputs the image
+    This model takes a samples from the noise source
+    and coordinates and outputs the image
     """
 
     def __init__(
@@ -18,7 +19,7 @@ class Generator(nn.Module):
 
         Args:
             n_qubits (int): Number of qubits in the circuit
-            n_layers (int): Number of layers in the circuit (excluding the last one)
+            n_layers (int): Number of layers in the circuit (excl the last one)
 
         Returns:
             None

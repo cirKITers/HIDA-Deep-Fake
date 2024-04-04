@@ -1,4 +1,3 @@
-# %%
 import torchvision
 from matplotlib import pyplot as plt
 import torch
@@ -10,13 +9,7 @@ from QGenerator import Generator
 from Discriminator import Discriminator
 from NoiseSource import NoiseSource
 
-# To get this running:
-# - make sure to install [pytorch correctly](https://pytorch.org/get-started/locally/)
-# - launch the mlflow tracking server: `mlflow server`
-# - run the notebook
 
-
-# %%
 # Initialization of some global parameters
 image_size = 12  # MNIST image size. This will increase computation time quadratically
 batch_size = 20  # Batch Size
@@ -32,7 +25,7 @@ seed = 100  # Seed for generating random numbers
 
 rng = torch.Generator().manual_seed(seed)
 
-# %%
+
 # Load MNIST dataset
 dataset = torchvision.datasets.MNIST(
     root="./data",
@@ -44,11 +37,9 @@ dataset = torchvision.datasets.MNIST(
 )
 
 
-# %%
 # Generator definition
 
 
-# %%
 # Determine if CUDA is available
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -59,7 +50,7 @@ noise_source = NoiseSource(
 generator = Generator(n_qubits=n_qubits, n_layers=n_layers).to(device)
 discriminator = Discriminator(image_size=image_size).to(device)
 
-# %%
+
 # Initialize the optimizers for the generator and discriminator separately
 # We use individual optimizers because it allows us to have different learning rates
 # and further separate the parameters of the models as seen later in training
@@ -69,7 +60,6 @@ opt_generator = torch.optim.Adam(generator.parameters(), lr=0.01)
 loss = nn.BCELoss()  # BCELoss with mean so that we don't depend on the batch size
 
 
-# %%
 class Dataset(torch.utils.data.Dataset):
     """Custom Dataset that allows us to get the coordinates an the reference images.
     It also includes noise samples.
@@ -144,7 +134,6 @@ dataloader = torch.utils.data.DataLoader(
 )
 
 
-# %%
 # Will help us to detect e.g. when parts of the model don't receive gradients
 torch.autograd.set_detect_anomaly(True)
 
@@ -176,7 +165,8 @@ with mlflow.start_run() as run:
     plt.close()
 
     print(
-        f"Training started. Navigate to the MLflow UI at http://localhost:5000/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
+        f"Training started. Navigate to the MLflow UI at
+          http://localhost:5000/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
     )
 
     total_step = 0
