@@ -5,10 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Main",
+            "name": "CC GAN",
             "type": "debugpy",
             "request": "launch",
             "program": "src/__main__.py",
+            "args": [
+                "--model=cc"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "CQ GAN",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "src/__main__.py",
+            "args": [
+                "--model=cq"
+            ],
             "console": "integratedTerminal"
         },
     ]

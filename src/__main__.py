@@ -221,7 +221,7 @@ class Trainer:
             )
             mlflow.pytorch.log_model(
                 discriminator,
-                artifact_path=f"{generator.__class__.__module__}",
+                artifact_path=f"{discriminator.__class__.__module__}",
                 registered_model_name=discriminator.__class__.__module__.replace(
                     "_", " "
                 ).title(),
@@ -343,27 +343,20 @@ class Trainer:
         raise NotImplementedError()
 
 
-def train_all(params: Namespace) -> None:
-    """
-    Train all three types of GANs using the given parameters.
-
-    Args:
-        params: The parsed command line arguments.
-
-    Returns:
-        None
-    """
-    trainer = Trainer(params)
-    trainer.train_cc_gan()
-    trainer.train_cq_gan()
-    pass
-
-
 def main():
     configParser = ConfigParser()
     params = configParser.get_config()
 
-    train_all(params)
+    trainer = Trainer(params)
+    if params.model == "all":
+        trainer.train_cc_gan()
+        trainer.train_cq_gan()
+    elif params.model == "cc":
+        trainer.train_cc_gan()
+    elif params.model == "cq":
+        trainer.train_cq_gan()
+    else:
+        raise NotImplementedError
 
 
 if __name__ == "__main__":
