@@ -121,7 +121,7 @@ class Generator(nn.Module):
             x (torch.Tensor): The known image values. Shape = [B, IS, IS, 2].
 
         Returns:
-            torch.Tensor: The generated images. Shape = [B, IS, IS, 2].
+            torch.Tensor: The generated images. Shape = [B, IS*IS].
         """
         # get the known variables
         batch_size = x.shape[0]
