@@ -153,6 +153,9 @@ class Trainer:
                 mlflow.log_figure(fig, f"generated_epoch_{epoch}.png")
                 plt.close()
 
+        mlflow.pytorch.log_model(generator, registered_model_name=generator)
+        mlflow.pytorch.log_model(discriminator)
+
         log.info("Training finished")
 
     def train_cc_gan(self):
@@ -206,7 +209,7 @@ class Trainer:
         log.info("Instantiating discriminator")
         discriminator = Discriminator(image_size=self.params.image_size).to(self.device)
 
-        opt_generator = torch.optim.Adam(generator.parameters(), lr=self.params.c_lr)
+        opt_generator = torch.optim.Adam(generator.parameters(), lr=self.params.q_lr)
         opt_discriminator = torch.optim.Adam(
             discriminator.parameters(), lr=self.params.d_lr
         )
