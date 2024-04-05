@@ -47,7 +47,9 @@ class Generator(nn.Module):
         Returns:
             torch.Tensor: The expectation value of the PauliZ observable.
         """
+        # x describes the input coordinate tensor
         x = inputs[:, :2]  # [B*IS*IS, NQ+2] -> [B*IS*IS, 2]
+        # p describes the input noise tensor
         p = inputs[:, 2:]  # [B*IS*IS, NQ+2] -> [B*IS*IS, NQ]
 
         # build the trainable circuit
@@ -71,6 +73,7 @@ class Generator(nn.Module):
             p (torch.Tensor): The input noise states. Shape = [B*IS*IS, NQ]
         """
         for qubit in range(self.n_qubits):
+            # batch input all noise inputs and select only the qubit
             qml.RZ(p[:, qubit], wires=qubit)
 
     def iec(self, x: torch.Tensor) -> None:
@@ -80,11 +83,15 @@ class Generator(nn.Module):
             x (torch.Tensor): The input coordinates. Shape = [B*IS*IS, 2]
         """
         for qubit in range(self.n_qubits):
+            # batch input all coordinate inputs and select only the x0 values
             qml.RX(x[:, 0], wires=qubit)
+            # batch input all coordinate inputs and select only the x1 values
             qml.RY(x[:, 1], wires=qubit)
 
     def vqc(self, weights: torch.Tensor) -> None:
         r"""Applies the variational quantum circuit to the qubits.
+        Currently the ansatz equals 'Circuit 19' from
+        https://arxiv.org/abs/1905.10876
 
         Args:
             weights (torch.Tensor): The weights for the quantum circuit.

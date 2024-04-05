@@ -4,6 +4,7 @@ import mlflow
 from mlflow.models import infer_signature
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from argparse import Namespace
 
 from log import create_logger, set_level
 
@@ -19,7 +20,19 @@ from config_parser import ConfigParser
 
 
 class Trainer:
-    def __init__(self, params) -> None:
+    def __init__(self, params: Namespace) -> None:
+        """
+        Initializes the trainer with the given configuration parameters.
+
+        Parameters
+        ----------
+        params : Namespace
+            The configuration parameters for the experiment.
+
+        Returns
+        -------
+        None
+        """
         self.params = params
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         torch.autograd.set_detect_anomaly(True)
@@ -47,27 +60,68 @@ class Trainer:
 
         self.setup_mlflow()
 
-    def setup_mlflow(self):
+    def setup_mlflow(self) -> None:
+        """
+        Setup mlflow experiment using the given server URL.
+
+        Parameters
+        ----------
+        self : Trainer
+            The trainer instance.
+
+        Returns
+        -------
+        None
+        """
         log.info(
             f"Setting up mlflow experiment using server at {self.params.tracking_uri}"
         )
-        mlflow.set_tracking_uri(self.params.tracking_uri)
+        mlflow.set_tracking_uri(str(self.params.tracking_uri))
         mlflow.set_experiment("QGAN Test")
 
     def run_mlflow(self):
-        log.info(f"Trying to connect to mlflow server.")
+        """
+        Start an mlflow run and return the run object.
+
+        Returns
+        -------
+        mlflow.ActiveRun
+            The run object representing the new experiment run.
+        """
+        log.info("Trying to connect to mlflow server.")
         run = mlflow.start_run()
         log.info("Connected!")
         return run
 
+    @torch.no_grad()
     def train_general_gan(
         self,
-        generator,
-        discriminator,
-        opt_generator,
-        opt_discriminator,
-        noiseSource,
-    ):
+        generator: nn.Module,
+        discriminator: nn.Module,
+        opt_generator: torch.optim.Optimizer,
+        opt_discriminator: torch.optim.Optimizer,
+        noiseSource: nn.Module,
+    ) -> None:
+        """
+        Train the general GAN model.
+
+        Parameters
+        ----------
+        generator : Generator
+            Generator model.
+        discriminator : Discriminator
+            Discriminator model.
+        opt_generator : optim.Optimizer
+            Optimizer for the generator.
+        opt_discriminator : optim.Optimizer
+            Optimizer for the discriminator.
+        noiseSource : NoiseSource
+            Noise source model.
+
+        Returns
+        -------
+        None
+        """
         with self.run_mlflow() as run:
             log.info(
                 f"Results will be logged at http://localhost:5000/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"  # noqa
@@ -179,7 +233,18 @@ class Trainer:
 
         log.info("Training finished")
 
-    def train_cc_gan(self):
+    @torch.no_grad()
+    def train_cc_gan(
+        self,
+    ) -> None:
+        """Training of Classical Generator and Classical Discriminator GAN
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         log.info("Instantiating classical noise source")
         noise_source = CNoiseSource(
             output_shape=(self.params.latent_size),
@@ -210,13 +275,24 @@ class Trainer:
             noiseSource=noise_source,
         )
 
-    def train_cq_gan(self):
+    @torch.no_grad()
+    def train_cq_gan(
+        self,  # type: Trainer
+    ) -> None:
+        """Training of Classical Generator and Quantum Discriminator GAN
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         log.info("Instantiating classical noise source")
         log.warning(
             f"Using latent space dimension {self.params.n_qubits} instead of {self.params.latent_size}"
         )
         noise_source = CNoiseSource(
-            output_shape=(self.params.n_qubits),
+            output_shape=(self.params.n_qubits),  # type: ignore
             rng=self.rng,
             noise_gain=self.params.noise_gain,
             noise_offset=self.params.noise_offset,
@@ -245,16 +321,41 @@ class Trainer:
         )
 
     def train_qc_gan(self):
+        """Training of Quantum Generator and Classical Discriminator GAN
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         raise NotImplementedError()
 
     def train_qq_gan(self):
+        """Training of Quantum Generator and Quantum Discriminator GAN
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         raise NotImplementedError()
 
     def train_final_discriminator(self, params):
         raise NotImplementedError()
 
 
-def train_all(params):
+def train_all(params: Namespace) -> None:
+    """
+    Train all three types of GANs using the given parameters.
+
+    Args:
+        params: The parsed command line arguments.
+
+    Returns:
+        None
+    """
     trainer = Trainer(params)
     trainer.train_cc_gan()
     trainer.train_cq_gan()
