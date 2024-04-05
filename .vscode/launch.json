@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "src/__main__.py",
             "args": [
-                "--model=cc"
+                "--epochs=10",
+                "--overwrite_config=config/cc_gan.yaml",
             ],
             "console": "integratedTerminal"
         },
@@ -20,7 +21,8 @@
             "request": "launch",
             "program": "src/__main__.py",
             "args": [
-                "--model=cq"
+                "--epochs=10",
+                "--overwrite_config=config/cq_gan.yaml",
             ],
             "console": "integratedTerminal"
         },
