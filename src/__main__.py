@@ -259,9 +259,9 @@ class Trainer:
         log.info("Instantiating discriminator")
         discriminator = Discriminator(image_size=self.params.image_size).to(self.device)
 
-        opt_generator = torch.optim.Adam(generator.parameters(), lr=self.params.c_lr)
+        opt_generator = torch.optim.Adam(generator.parameters(), lr=self.params.gen_lr)
         opt_discriminator = torch.optim.Adam(
-            discriminator.parameters(), lr=self.params.d_lr
+            discriminator.parameters(), lr=self.params.disc_lr
         )
 
         log.info("Starting training of CC-GAN")
@@ -303,9 +303,9 @@ class Trainer:
         log.info("Instantiating discriminator")
         discriminator = Discriminator(image_size=self.params.image_size).to(self.device)
 
-        opt_generator = torch.optim.Adam(generator.parameters(), lr=self.params.q_lr)
+        opt_generator = torch.optim.Adam(generator.parameters(), lr=self.params.gen_lr)
         opt_discriminator = torch.optim.Adam(
-            discriminator.parameters(), lr=self.params.d_lr
+            discriminator.parameters(), lr=self.params.disc_lr
         )
 
         log.info("Starting training of CC-GAN")

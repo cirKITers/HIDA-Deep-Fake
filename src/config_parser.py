@@ -13,6 +13,7 @@ class ConfigParser:
 
         parser.add_argument("--default_config", type=str, default="config/default.yaml")
         parser.add_argument("--overwrite_config", type=str)
+        parser.add_argument("--data_dir", type=str)
         parser.add_argument("--seed", type=int)
         parser.add_argument("--image_size", type=int)
         parser.add_argument("--batch_size", type=int)
