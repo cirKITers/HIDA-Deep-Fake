@@ -93,7 +93,6 @@ class Trainer:
         log.info("Connected!")
         return run
 
-    @torch.no_grad()
     def train_general_gan(
         self,
         generator: nn.Module,
@@ -233,7 +232,6 @@ class Trainer:
 
         log.info("Training finished")
 
-    @torch.no_grad()
     def train_cc_gan(
         self,
     ) -> None:
@@ -275,7 +273,6 @@ class Trainer:
             noiseSource=noise_source,
         )
 
-    @torch.no_grad()
     def train_cq_gan(
         self,  # type: Trainer
     ) -> None:
