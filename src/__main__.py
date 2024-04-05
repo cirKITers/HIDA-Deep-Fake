@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import mlflow
+from mlflow.models import infer_signature
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
@@ -153,8 +154,28 @@ class Trainer:
                 mlflow.log_figure(fig, f"generated_epoch_{epoch}.png")
                 plt.close()
 
-        mlflow.pytorch.log_model(generator, registered_model_name=generator)
-        mlflow.pytorch.log_model(discriminator)
+            log.info("Saving models")
+
+            mlflow.pytorch.log_model(
+                generator,
+                artifact_path=f"{generator.__class__.__module__}",
+                registered_model_name=generator.__class__.__module__.replace(
+                    "_", " "
+                ).title(),
+                signature=infer_signature(
+                    {"p": p_hat.numpy(), "x": x.numpy()}, {"z": z_hat.detach().numpy()}
+                ),
+            )
+            mlflow.pytorch.log_model(
+                discriminator,
+                artifact_path=f"{generator.__class__.__module__}",
+                registered_model_name=discriminator.__class__.__module__.replace(
+                    "_", " "
+                ).title(),
+                signature=infer_signature(
+                    {"z": z.detach().numpy()}, {"y": y.detach().numpy()}
+                ),
+            )
 
         log.info("Training finished")
 
