@@ -1,11 +1,3 @@
-import torch
-import torch.nn as nn
-import mlflow
-from mlflow.models import infer_signature
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-from argparse import Namespace
-
 from log import create_logger, set_level
 
 log = create_logger(__name__)
@@ -17,6 +9,14 @@ from quantum_generator import Generator as QGenerator
 from quantum_noise_source import NoiseSource as QNoiseSource
 from dataset import Dataset
 from config_parser import ConfigParser
+
+import torch
+import torch.nn as nn
+import mlflow
+from mlflow.models import infer_signature
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from argparse import Namespace
 
 
 class Trainer:
