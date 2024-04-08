@@ -5,11 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: abc",
+            "name": "CC GAN",
             "type": "debugpy",
             "request": "launch",
-            "program": "notebooks/qgan.py",
-            "console": "integratedTerminal",
-        }
+            "program": "src/__main__.py",
+            "args": [
+                "--epochs=10",
+                "--overwrite_config=config/cc_gan.yaml",
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "CQ GAN",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "src/__main__.py",
+            "args": [
+                "--epochs=10",
+                "--overwrite_config=config/cq_gan.yaml",
+            ],
+            "console": "integratedTerminal"
+        },
     ]
 }
