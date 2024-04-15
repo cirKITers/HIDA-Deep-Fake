@@ -297,7 +297,9 @@ class Trainer:
 
         log.info("Instantiating quantum generator")
         generator = QGenerator(
-            n_qubits=self.params.n_qubits, n_layers=self.params.n_layers
+            n_qubits=self.params.n_qubits,
+            n_layers=self.params.n_layers,
+            generator_update_step=self.params.generator_update_step,
         ).to(self.device)
 
         log.info("Instantiating discriminator")

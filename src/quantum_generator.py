@@ -13,6 +13,7 @@ class Generator(nn.Module):
         self,
         n_qubits: int,
         n_layers: int,
+        generator_update_step: int,
         **kwargs,
     ) -> None:
         """Construct a quantum circuit as a TorchLayer.
@@ -29,11 +30,20 @@ class Generator(nn.Module):
         self.n_qubits = n_qubits
         self.n_layers = n_layers + 1
 
+        self.generator_update_step = generator_update_step
+
         dev = qml.device("default.qubit", wires=self.n_qubits)
         self.qnode = qml.QNode(self.circuit, dev, interface="torch")
         self.qlayer = qml.qnn.TorchLayer(
             self.qnode,
-            {"weights": [self.n_layers, self.n_qubits, self.vqc(None)]},
+            {
+                "weights": [
+                    self.n_layers,
+                    self.n_qubits,
+                    # last dim is [[..vqc..], [..iec..], [..nec..]]
+                    self.vqc(None) + self.iec(None, None) + self.nec(None, None),
+                ]
+            },
         )
 
     def circuit(self, weights: torch.Tensor, inputs: torch.Tensor) -> torch.Tensor:
@@ -54,39 +64,49 @@ class Generator(nn.Module):
 
         # build the trainable circuit
         for layer in range(self.n_layers - 1):
-            self.nec(p)  # prepare random states
-            self.vqc(weights[layer])
-            self.iec(x)
+            if layer % self.generator_update_step == 0:
+                # slice weights such that we only get the nec weights
+                self.nec(
+                    p, weights[layer, :, -self.nec(None, None) :]
+                )  # prepare random states
+
+            # slice weights such that we only get the vqc weights
+            self.vqc(weights[layer, :, : self.vqc(None)])
+            # slice weights such that we only get the iec weights
+            self.iec(x, weights[layer, :, self.vqc(None) : -self.nec(None, None)])
 
         # add a last vqc layer
         self.vqc(weights[-1])
 
         return qml.expval(qml.PauliZ(0))
 
-    def nec(
-        self,
-        p: torch.Tensor,
-    ) -> None:
+    def nec(self, p: torch.Tensor, weights: torch.Tensor) -> None:
         """Prepares the random states in the quantum circuit.
 
         Args:
             p (torch.Tensor): The input noise states. Shape = [B*IS*IS, NQ]
         """
+        if weights is None:
+            return 1  # used to get the number of required params per layer
+
         for qubit in range(self.n_qubits):
             # batch input all noise inputs and select only the qubit
-            qml.RZ(p[:, qubit], wires=qubit)
+            qml.RZ(p[:, qubit], wires=qubit)  # * weights[qubit, 0]
 
-    def iec(self, x: torch.Tensor) -> None:
+    def iec(self, x: torch.Tensor, weights: torch.Tensor) -> None:
         """Encodes the input coordinates onto the quantum circuit.
 
         Args:
             x (torch.Tensor): The input coordinates. Shape = [B*IS*IS, 2]
         """
+        if weights is None:
+            return 2  # used to get the number of required params per layer
+
         for qubit in range(self.n_qubits):
             # batch input all coordinate inputs and select only the x0 values
-            qml.RX(x[:, 0], wires=qubit)
+            qml.RX(x[:, 0] + torch.tanh(weights[qubit, 0]), wires=qubit)  #
             # batch input all coordinate inputs and select only the x1 values
-            qml.RY(x[:, 1], wires=qubit)
+            qml.RY(x[:, 1] + torch.tanh(weights[qubit, 1]), wires=qubit)  #
 
     def vqc(self, weights: torch.Tensor) -> None:
         r"""Applies the variational quantum circuit to the qubits.
