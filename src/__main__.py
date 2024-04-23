@@ -36,7 +36,10 @@ class Trainer:
         self.params = params
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         torch.autograd.set_detect_anomaly(True)
+        # Seed rng for the dataloader
         self.rng = torch.Generator().manual_seed(params.seed)
+        
+
         set_level(log, params.log_level)
 
         log.info("Intializing dataset")
@@ -252,11 +255,15 @@ class Trainer:
         )
 
         log.info("Instantiating classical generator")
+        # Re-Seed for EACH model initialisation
+        torch.manual_seed(self.params.seed)
         generator = CGenenerator(
             latent_size=self.params.latent_size, image_size=self.params.image_size
         ).to(self.device)
 
         log.info("Instantiating discriminator")
+        # Re-Seed for EACH model initialisation
+        torch.manual_seed(self.params.seed)
         discriminator = Discriminator(image_size=self.params.image_size).to(self.device)
 
         opt_generator = torch.optim.Adam(generator.parameters(), lr=self.params.gen_lr)
@@ -296,11 +303,15 @@ class Trainer:
         )
 
         log.info("Instantiating quantum generator")
+        # Re-Seed for EACH model initialisation
+        torch.manual_seed(self.params.seed)
         generator = QGenerator(
             n_qubits=self.params.n_qubits, n_layers=self.params.n_layers
         ).to(self.device)
 
         log.info("Instantiating discriminator")
+        # Re-Seed for EACH model initialisation
+        torch.manual_seed(self.params.seed)
         discriminator = Discriminator(image_size=self.params.image_size).to(self.device)
 
         opt_generator = torch.optim.Adam(generator.parameters(), lr=self.params.gen_lr)
