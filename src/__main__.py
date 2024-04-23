@@ -299,7 +299,6 @@ class Trainer:
         generator = QGenerator(
             n_qubits=self.params.n_qubits,
             n_layers=self.params.n_layers,
-            generator_update_step=self.params.generator_update_step,
         ).to(self.device)
 
         log.info("Instantiating discriminator")
@@ -310,7 +309,7 @@ class Trainer:
             discriminator.parameters(), lr=self.params.disc_lr
         )
 
-        log.info("Starting training of CC-GAN")
+        log.info("Starting training of CQ-GAN")
         self.train_general_gan(
             generator=generator,
             discriminator=discriminator,
