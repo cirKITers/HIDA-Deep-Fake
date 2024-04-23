@@ -1,8 +1,8 @@
-gen_lr: 0.02
+gen_lr: 0.005
 model: cq
 
 n_samples: 200
 n_qubits: 6
 n_layers: 11
-generator_update_step: 2
+generator_update_step: 3
 noise_gain: 0.5
