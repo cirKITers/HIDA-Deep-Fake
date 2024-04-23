@@ -128,8 +128,8 @@ class Generator(nn.Module):
             qml.CRX(
                 qubit_weights[2],
                 wires=[
-                    qubit,
-                    (qubit + 1) % weights.shape[0],
+                    weights.shape[0] - qubit - 1,
+                    (weights.shape[0] - qubit) % weights.shape[0],
                 ],
             )
 
